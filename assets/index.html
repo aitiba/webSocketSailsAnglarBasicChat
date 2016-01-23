@@ -6,6 +6,8 @@
 	<link rel="stylesheet" type="text/css" href="/styles/bootstrap.min.css">
 	<!-- Open Sans Font -->
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="/bower_components/angular-flash-alert/dist/angular-flash.min.css">
+
   <style media="screen">
     body{
       background: #ededed;
@@ -51,10 +53,12 @@
   </style>
 </head>
 <body ng-app="socketApp" ng-controller="ChatController">
+  <!-- area to display flash messages -->
+  <div flash-message="5000" ></div>
 
   <div class="col-md-12" style="padding:100px">
   	<table  class="table">
-  		<tr class="chat_message" ng-repeat="chat in chatList | orderBy:predicate:reverse | limitTo: 15">
+  		<tr class="chat_message" ng-repeat="chat in chatList track by $index| orderBy:predicate:reverse | limitTo: 15">
   			<td class="col-md-12 td_class"><strong>{{chat.user}} : {{chat.message}}</strong> </td>
   		</tr>
   	</table>
@@ -83,11 +87,11 @@
 	<script type="text/javascript" src="/js/dependencies/sails.io.js"></script>
 	<!-- Angular Js  -->
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.27/angular.min.js"></script>
+   <script src="/bower_components/angular-flash-alert/dist/angular-flash.min.js"></script>
   <script type="text/javascript">
-  var socketApp = angular.module('socketApp',[]);
+  var socketApp = angular.module('socketApp',['flash']);
 
-  socketApp.controller('ChatController',['$http','$log','$scope',function($http,$log,$scope){
-
+  socketApp.controller('ChatController',['$http','$log','$scope', 'Flash', function($http, $log, $scope, Flash){
 
     $scope.predicate = '-id';
     $scope.reverse = false;
@@ -115,11 +119,11 @@
         // this code occurs on brodcasted clients/sockets
         $log.info(obj)
         $scope.chatList.push(obj.data);
-        alert("XXXXX HAS SEND A NEW MESSAGE");
+        var message = '<strong>' + obj.data.user + '</strong> has send a message';
+        Flash.create('success', message, 'custom-class');
         $scope.$digest();
       }
 
-      $scope.chatList.push(obj.data);
     });
 
     $scope.sendMsg = function(){
@@ -128,6 +132,8 @@
       io.socket.post('/chat/addconv/',message);
       $scope.chatList.push(message);
       $scope.chatMessage = "";
+      var message = 'Message sended correctly.';
+      Flash.create('success', message, 'custom-class');
     };
   }]);
   </script>
